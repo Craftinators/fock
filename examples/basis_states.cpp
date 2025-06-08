@@ -1,6 +1,5 @@
 #include <bitset>
 #include <iostream>
-#include <bits/ostream.tcc>
 #include <fock/library.h>
 
 int main()
