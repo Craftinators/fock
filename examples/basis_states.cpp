@@ -4,12 +4,10 @@
 
 int main()
 {
-    const int n = 7;
-    int k = 4;
+    constexpr int n = 7, k = 4;
 
-    auto states = generate_basis_states(n, k);
-
-    for (auto state: states)
+    for (const auto states = generate_basis_states(n, k);
+        const auto state: states)
     {
         std::cout << std::bitset<n>(state) << std::endl;
     }
