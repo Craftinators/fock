@@ -4,6 +4,6 @@
 #include <cstdint>
 #include <vector>
 
-std::vector<std::uint64_t> generate_basis_states(int n, int k);
+std::vector<std::uint64_t> generate_basis_states(unsigned int lattice_size, unsigned int fermion_count);
 
 #endif //FOCK_LIBRARY_H
