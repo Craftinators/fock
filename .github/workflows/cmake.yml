@@ -139,8 +139,9 @@ jobs:
           -DCMAKE_CXX_COMPILER=g++
           -DCMAKE_C_COMPILER=gcc
           -DCMAKE_BUILD_TYPE=Debug
-          -DCMAKE_CXX_FLAGS="--coverage"
-          -DCMAKE_C_FLAGS="--coverage"
+          -DCMAKE_CXX_FLAGS="--coverage -fprofile-arcs -ftest-coverage"
+          -DCMAKE_C_FLAGS="--coverage -fprofile-arcs -ftest-coverage"
+          -DCMAKE_EXE_LINKER_FLAGS="--coverage"
           -S ${{ github.workspace }}
 
       - name: Build
@@ -150,10 +151,25 @@ jobs:
         working-directory: ${{ steps.strings.outputs.build-output-dir }}
         run: ctest --build-config Debug --output-on-failure
 
+      - name: Debug coverage files
+        run: |
+          echo "Searching for .gcda files..."
+          find ${{ steps.strings.outputs.build-output-dir }} -name "*.gcda" -type f || echo "No .gcda files found"
+          echo "Searching for .gcno files..."
+          find ${{ steps.strings.outputs.build-output-dir }} -name "*.gcno" -type f || echo "No .gcno files found"
+
       - name: Generate coverage report
         run: |
-          lcov --capture --directory ${{ steps.strings.outputs.build-output-dir }} --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' --output-file coverage.info
+          # Initialize lcov
+          lcov --zerocounters --directory ${{ steps.strings.outputs.build-output-dir }}
+          
+          # Capture coverage data
+          lcov --capture --directory ${{ steps.strings.outputs.build-output-dir }} --output-file coverage.info --ignore-errors empty
+          
+          # Remove system files from coverage
+          lcov --remove coverage.info '/usr/*' '*/usr/*' --output-file coverage.info
+          
+          # List coverage info
           lcov --list coverage.info
 
       - name: Upload coverage to Codecov
