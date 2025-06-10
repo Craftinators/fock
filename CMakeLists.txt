@@ -1,8 +1,15 @@
 cmake_minimum_required(VERSION 3.31)
-project(fock LANGUAGES CXX)
+project(fock LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# mini-gmp target
+add_library(mini-gmp STATIC external/mini-gmp/src/mini-gmp.c)
+
+target_include_directories(mini-gmp PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/mini-gmp/include>
+)
 
 # Create static library from source
 add_library(fock STATIC src/library.cpp)
@@ -11,6 +18,8 @@ add_library(fock STATIC src/library.cpp)
 target_include_directories(fock PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+
+target_link_libraries(fock PRIVATE mini-gmp)
 
 # Use benchmarking
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
