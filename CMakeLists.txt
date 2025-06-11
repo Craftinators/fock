@@ -11,29 +11,43 @@ target_include_directories(mini-gmp PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/mini-gmp/include>
 )
 
-# Create static library from source
 add_library(fock STATIC src/library.cpp)
 
-# Publicly expose the include directory
 target_include_directories(fock PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
-target_link_libraries(fock PRIVATE mini-gmp)
+include(FetchContent)
 
-# Use benchmarking
+# Disable google tests
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
 
-include(FetchContent)
+# Disable Eigen tests and examples to speed up build
+set(EIGEN_BUILD_DOC OFF CACHE BOOL "" FORCE)
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(EIGEN_BUILD_PKGCONFIG OFF CACHE BOOL "" FORCE)
 
+# Eigen
+FetchContent_Declare(
+        Eigen3
+        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+        GIT_TAG        3.4.0  # Latest stable version
+)
+
+# Google benchmark
 FetchContent_Declare(
         benchmark
         GIT_REPOSITORY https://github.com/google/benchmark.git
         GIT_TAG        eddb0241389718a23a42db6af5f0164b6e0139af # Release v1.9.4
 )
 
-FetchContent_MakeAvailable(benchmark)
+FetchContent_MakeAvailable(Eigen3 benchmark)
+
+target_link_libraries(fock
+        PRIVATE mini-gmp
+        PUBLIC Eigen3::Eigen
+)
 
 # Make benchmark headers available globally
 target_include_directories(benchmark PUBLIC
