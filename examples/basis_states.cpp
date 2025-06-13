@@ -23,5 +23,5 @@ int main()
 
     const Lattice lattice({ lattice_size, lattice_size },
         { BoundaryCondition::OPEN, BoundaryCondition::OPEN });
-    std::cout << lattice.site_count_ << std::endl;
+    std::cout << lattice.site_count() << std::endl;
 }
