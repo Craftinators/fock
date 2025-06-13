@@ -1,6 +1,8 @@
 #include <bitset>
 #include <iostream>
-#include <fock/library.h>
+#include <fock/library.hpp>
+
+#include <fock/lattice.hpp>
 
 int main()
 {
@@ -18,4 +20,8 @@ int main()
             std::cout << "Adjacent State " << ++i << ": " << std::bitset<lattice_size>(adjacent_state) << std::endl;
         }
     }
+
+    const Lattice lattice({ lattice_size, lattice_size },
+        { BoundaryCondition::OPEN, BoundaryCondition::OPEN });
+    std::cout << lattice.site_count_ << std::endl;
 }

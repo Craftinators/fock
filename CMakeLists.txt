@@ -11,7 +11,10 @@ target_include_directories(mini-gmp PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/mini-gmp/include>
 )
 
-add_library(fock STATIC src/library.cpp)
+add_library(fock STATIC
+        src/library.cpp
+        src/lattice.cpp
+)
 
 target_include_directories(fock PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

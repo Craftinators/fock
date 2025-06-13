@@ -1,6 +1,6 @@
 #include <cstdint>
 #include <vector>
-#include <fock/library.h>
+#include <fock/library.hpp>
 #include <Eigen/Sparse>
 
 constexpr uint64_t binomial_coefficient(const unsigned n, unsigned k) noexcept

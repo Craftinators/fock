@@ -1,5 +1,5 @@
 #include <benchmark/benchmark.h>
-#include <fock/library.h>
+#include <fock/library.hpp>
 
 static void BM_GenerateBasisStates(benchmark::State& state) {
     const int64_t n = state.range(0);
