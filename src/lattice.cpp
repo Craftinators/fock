@@ -1,38 +1,46 @@
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <fock/lattice.hpp>
 
-Lattice::Lattice(const std::vector<unsigned> &dimensions, const std::vector<BoundaryCondition> &boundary_conditions)
-: dimensions_(dimensions), boundary_conditions_(boundary_conditions), site_count_(0)
+Lattice::Lattice(const std::initializer_list<std::size_t> dimension_sizes, const std::initializer_list<BoundaryCondition> boundary_conditions)
+    : dimension_sizes_{ dimension_sizes }, boundary_conditions_{ boundary_conditions }, site_count_{ safe_prod(dimension_sizes_) }
 {
-    if (dimensions_.empty())
-    {
-        throw std::invalid_argument("dimensions must be non-empty");
-    }
-
-    if (dimensions_.size() != boundary_conditions_.size())
+    if (dimension_sizes_.size() != boundary_conditions_.size())
     {
         std::ostringstream oss;
-        oss << "Mismatch between number of dimensions (" << dimensions_.size()
-                << ") and number of boundary conditions specified (" << boundary_conditions_.size() << ").";
-        throw std::invalid_argument(oss.str());
-    }
-
-    site_count_ = 1;
-    for (int i = 0; i < dimensions_.size(); ++i)
-    {
-        if (dimensions_[i] <= 0)
-        {
-            std::ostringstream oss;
-            oss << "Dimension size at axis " << i << " must be positive, got " << dimensions_[i] << ".";
-            throw std::invalid_argument(oss.str());
-        }
-        site_count_ *= dimensions_[i];
-    }
-
-    // Should never run
-    if (site_count_ == 0 && !dimensions_.empty()) {
-        throw std::runtime_error("Calculated zero sites for a non-empty dimension set; overflow or invalid input.");
+        oss << "Dimension count (" << dimension_sizes_.size()
+            << ") does not match BC count ("
+            << boundary_conditions_.size() << ").";
+        throw std::invalid_argument{oss.str()};
     }
 }
 
+std::size_t Lattice::safe_prod(const std::vector<std::size_t> &dimension_sizes)
+{
+    if (dimension_sizes.empty())
+    {
+        throw std::invalid_argument{"Lattice dimensions must be non-empty."};
+    }
+
+    std::size_t accumulation = 1;
+    for (std::size_t i = 0; i < dimension_sizes.size(); ++i)
+    {
+        std::size_t dimension_size = dimension_sizes[i];
+        if (dimension_size == 0)
+        {
+            std::ostringstream oss;
+            oss << "Dimension at axis " << i << " must be > 0; got 0.";
+            throw std::invalid_argument{oss.str()};
+        }
+
+        if (dimension_size > std::numeric_limits<std::size_t>::max() / accumulation)
+        {
+            throw std::overflow_error{"Product of dimensions overflows size_t."};
+        }
+
+        accumulation *= dimension_size;
+    }
+
+    return accumulation;
+}
