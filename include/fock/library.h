@@ -31,9 +31,10 @@ namespace fock
 
         const T normalization_factor = T(1) / T(mode_count); // TODO Check if 1 needs to be wrapped in T(...)
 
-        for (std::size_t i = 0; i < lattice_size; ++i)
+        // No need to compute till lattice_size if all we care about is subregion_size
+        for (std::size_t i = 0; i < subregion_size; ++i)
         {
-            for (std::size_t j = i; j < lattice_size; ++j) // The correlation matrix is symmetric
+            for (std::size_t j = i; j < subregion_size; ++j) // The correlation matrix is symmetric
             {
                 const unsigned difference = j - i;
                 const unsigned sum  = i + j + 2;
