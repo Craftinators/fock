@@ -3,7 +3,11 @@ project(fock)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_library(fock STATIC src/library.cpp)
+add_library(fock STATIC
+        src/build_modular_hamiltonian.cpp
+        src/build_subregion_correlation_matrix.cpp
+        src/entanglement_entropy.cpp
+)
 
 target_include_directories(fock PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
