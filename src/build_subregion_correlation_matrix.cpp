@@ -20,7 +20,6 @@ namespace fock
             return Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>::Zero(0, 0);
         }
 
-        // TODO Replace with perf code later, I need to take a closer look at it
         Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> subregion_correlation_matrix =
             Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>::Zero(lattice_size, lattice_size);
 
