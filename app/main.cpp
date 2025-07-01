@@ -1,4 +1,4 @@
-  #include <iomanip>
+#include <iomanip>
 #include <iostream>
 
 #include "fock/library.h"

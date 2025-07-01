@@ -21,26 +21,53 @@ namespace fock
         }
 
         // TODO Replace with perf code later, I need to take a closer look at it
-        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> correlation_matrix =
+        Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> subregion_correlation_matrix =
             Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>::Zero(lattice_size, lattice_size);
 
-        T pi = boost::math::constants::pi<T>();
-        T normalization_factor = T(2) / T(lattice_size + 1);
-        T sine_value = pi / T(lattice_size + 1);
-        for (int i = 0; i < lattice_size; ++i)
+        T normalization_factor = T(1) / T(2 * (lattice_size + 1));
+        T lower_sine_coefficient = boost::math::constants::pi<T>() * normalization_factor;
+        T upper_sine_coefficient = lower_sine_coefficient * T(2 * fermion_count + 1);
+
+        // Precompute Dirichlet kernels
+        std::unordered_map<unsigned, T> difference_kernel_values;
+        // When difference == 0, it results in singularity, thus we do not need to precompute this value.
+        // The largest value occurs when j == subregion_size - 1 (maximum) and i == 0 (minimum)
+        for (unsigned i = 1; i < subregion_size; ++i)
         {
-            for (int j = 0; j < lattice_size; ++j)
+            difference_kernel_values[i] = sin(upper_sine_coefficient * i) / sin(lower_sine_coefficient * i);
+        }
+
+        std::unordered_map<unsigned, T> sum_kernel_values;
+        // Minimum value occurs when i == j == 0, which results in sum == 2, whereas maximum occurs
+        // when i == j == subregion_size - 1, when results in sum == 2 * subregion_size
+        for (unsigned i = 2; i < 2 * subregion_size + 1; ++i)
+        {
+            sum_kernel_values[i] = sin(upper_sine_coefficient * i) / sin(lower_sine_coefficient * i);
+        }
+
+        for (unsigned i = 0; i < subregion_size; ++i)
+        {
+            for (unsigned j = i; j < subregion_size; ++j)
             {
+                unsigned difference = j - i;
+                unsigned sum = i + j + 2; // "+2" is an artifact of 0-indexing
+
                 T matrix_element = T(0);
-                for (int k = 1; k < fermion_count + 1; ++k)
+
+                if (difference == 0) // Handle singularity
                 {
-                    matrix_element += sin(sine_value * T(k) * T(i + 1)) * sin(sine_value * T(k) * T(j + 1));
+                    matrix_element = upper_sine_coefficient / lower_sine_coefficient - sum_kernel_values[sum];
                 }
-                correlation_matrix(i, j) = normalization_factor * matrix_element;
+                else
+                {
+                    matrix_element = difference_kernel_values[difference] - sum_kernel_values[sum];
+                }
+
+                subregion_correlation_matrix(i, j) = subregion_correlation_matrix(j, i) = normalization_factor * matrix_element;
             }
         }
 
-        return correlation_matrix.topLeftCorner(subregion_size, subregion_size);
+        return subregion_correlation_matrix;
     }
 
     template Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> build_subregion_correlation_matrix<double>(unsigned, unsigned, unsigned);
