@@ -4,14 +4,15 @@ namespace fock
 {
     template<typename T>
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>
-    fock::build_subregion_correlation_matrix(const unsigned lattice_size,
+    fock::build_subregion_correlation_matrix(
+        const unsigned lattice_length,
         const unsigned fermion_count,
         const unsigned subregion_size)
     {
         // TODO Replace with exceptions, this just temporary
-        assert(lattice_size != 0);
-        assert(fermion_count <= lattice_size);
-        assert(subregion_size <= lattice_size);
+        assert(lattice_length != 0);
+        assert(fermion_count <= lattice_length);
+        assert(subregion_size <= lattice_length);
 
         // Don't bother if subregion is 0, that's just a 0 by 0 matrix
         // TODO Should I just error here? I mean realistically what are you doing with a 0 by 0 matrix lol
@@ -21,9 +22,9 @@ namespace fock
         }
 
         Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> subregion_correlation_matrix =
-            Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>::Zero(lattice_size, lattice_size);
+            Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>::Zero(lattice_length, lattice_length);
 
-        T normalization_factor = T(1) / T(2 * (lattice_size + 1));
+        T normalization_factor = T(1) / T(2 * (lattice_length + 1));
         T lower_sine_coefficient = boost::math::constants::pi<T>() * normalization_factor;
         T upper_sine_coefficient = lower_sine_coefficient * T(2 * fermion_count + 1);
 

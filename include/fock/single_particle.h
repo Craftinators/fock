@@ -7,7 +7,7 @@
 namespace fock
 {
     template<typename T>
-    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> build_subregion_correlation_matrix(unsigned lattice_size, unsigned fermion_count, unsigned subregion_size);
+    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> build_subregion_correlation_matrix(unsigned lattice_length, unsigned fermion_count, unsigned subregion_size);
 
     extern template Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> build_subregion_correlation_matrix<double>(unsigned, unsigned, unsigned);
     extern template Eigen::Matrix<boost::multiprecision::cpp_dec_float_100, Eigen::Dynamic, Eigen::Dynamic> build_subregion_correlation_matrix<boost::multiprecision::cpp_dec_float_100>(unsigned, unsigned, unsigned);
