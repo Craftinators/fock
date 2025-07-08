@@ -1,36 +1,25 @@
 cmake_minimum_required(VERSION 3.31)
-project(fock)
-
+project(fock VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 20)
-
-add_library(fock STATIC
-        src/build_modular_hamiltonian.cpp
-        src/build_subregion_correlation_matrix.cpp
-        src/entanglement_entropy.cpp
-)
-
-target_include_directories(fock PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-)
+set(FOCK_VERSION ${CMAKE_PROJECT_VERSION})
 
 include(FetchContent)
 
-FetchContent_Declare(Eigen3
-        GIT_REPOSITORY
-        https://gitlab.com/libeigen/eigen.git
-        GIT_TAG        3.4.0
-)
+find_package(Eigen3 QUIET CONFIG)
 
-FetchContent_Declare(
-        Boost
-        GIT_REPOSITORY https://github.com/boostorg/boost.git
-        GIT_TAG        boost-1.88.0
-)
+if (NOT Eigen3_FOUND)
+    message(STATUS "Eigen3 not found, fetching via FetchContent")
+    FetchContent_Declare(Eigen3
+        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+        GIT_TAG origin/master
+    )
+    FetchContent_MakeAvailable(Eigen3)
+endif ()
 
-FetchContent_MakeAvailable(Eigen3 Boost)
+add_library(fock STATIC src/single_particle.cpp)
 
-target_link_libraries(fock
-        PUBLIC Eigen3::Eigen Boost::multiprecision
-)
+target_include_directories(fock PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
-add_subdirectory(app)
+target_link_libraries(fock PUBLIC Eigen3::Eigen)
+
+add_subdirectory(examples)
