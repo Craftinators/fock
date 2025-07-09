@@ -64,6 +64,11 @@ namespace fock
 
     double entanglement_entropy(const Eigen::MatrixXd &subregion_correlation_matrix)
     {
+        if (subregion_correlation_matrix.cols() == 0)
+        {
+            return 0;
+        }
+
         const Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(subregion_correlation_matrix);
         auto eigenvalues = solver.eigenvalues();
 
