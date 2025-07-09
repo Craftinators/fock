@@ -3,6 +3,18 @@ project(fock VERSION 0.0.0)
 set(CMAKE_CXX_STANDARD 20)
 set(FOCK_VERSION ${CMAKE_PROJECT_VERSION})
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(FOCK_DEBUG_BUILD)
+endif()
+
+if (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
+    set(IS_ROOT_PROJECT ON)
+else ()
+    set(IS_ROOT_PROJECT OFF)
+endif ()
+
+option(FOCK_BUILD_EXAMPLES "Build examples" ${IS_ROOT_PROJECT})
+
 include(FetchContent)
 
 find_package(Eigen3 QUIET CONFIG)
@@ -22,4 +34,6 @@ target_include_directories(fock PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_
 
 target_link_libraries(fock PUBLIC Eigen3::Eigen)
 
-add_subdirectory(examples)
+if (FOCK_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif ()

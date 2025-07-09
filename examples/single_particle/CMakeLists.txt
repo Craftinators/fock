@@ -1,0 +1,1 @@
+add_fock_example(varying_subregion_size varying_subregion_size.cpp)
