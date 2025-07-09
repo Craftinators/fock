@@ -98,6 +98,10 @@ namespace fock
         for (int i = 0; i < subregion_correlation_matrix.cols(); ++i)
         {
             const auto eigenvalue = eigenvalues(i);
+
+            if (constexpr double epsilon = std::numeric_limits<double>::epsilon();
+                eigenvalue < epsilon || eigenvalue > 1 - epsilon) continue;
+
             entanglement_spectrum(i) = log((1 - eigenvalue) / eigenvalue);
         }
 
