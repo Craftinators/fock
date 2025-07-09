@@ -1,2 +1,3 @@
+add_fock_example(modular_hamiltonian modular_hamiltonian.cpp)
 add_fock_example(subregion_correlation_matrix subregion_correlation_matrix.cpp)
 add_fock_example(varying_subregion_length varying_subregion_length.cpp)
