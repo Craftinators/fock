@@ -23,7 +23,7 @@ int main()
         fermion_count,
         subregion_length);
     auto time_elapsed = std::chrono::duration_cast<std::chrono::microseconds>(stopwatch.elapsed()).count();
-    spdlog::debug("Built subregion_correlation_matrix insub {0:d} us", time_elapsed);
+    spdlog::debug("Built subregion_correlation_matrix in {0:d} us", time_elapsed);
 
     // matplotplusplus does not support Eigen matrices out of the box, so sad :(
     std::vector matrix_elements(subregion_length, std::vector<double>(subregion_length));
