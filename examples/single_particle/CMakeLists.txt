@@ -1,1 +1,2 @@
-add_fock_example(varying_subregion_size varying_subregion_size.cpp)
+add_fock_example(subregion_correlation_matrix subregion_correlation_matrix.cpp)
+add_fock_example(varying_subregion_length varying_subregion_length.cpp)

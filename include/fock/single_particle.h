@@ -5,7 +5,7 @@
 
 namespace fock
 {
-    Eigen::MatrixXd build_subregion_correlation_matrix(unsigned lattice_length, unsigned fermion_count, unsigned subregion_size);
+    Eigen::MatrixXd build_subregion_correlation_matrix(unsigned lattice_length, unsigned fermion_count, unsigned subregion_length);
 
     double entanglement_entropy(const Eigen::MatrixXd& subregion_correlation_matrix);
 
