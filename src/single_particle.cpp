@@ -1,4 +1,5 @@
 #include "fock/single_particle.h"
+
 #include <numbers>
 
 namespace fock
@@ -74,13 +75,10 @@ namespace fock
 
         double entropy = 0;
 
+        const double delta = std::sqrt(std::numeric_limits<double>::epsilon());
         for (int i = 0; i < subregion_correlation_matrix.cols(); ++i)
         {
-            const double eigenvalue = eigenvalues(i);
-
-            if (constexpr double epsilon = std::numeric_limits<double>::epsilon();
-                eigenvalue < epsilon || eigenvalue > 1 - epsilon) continue;
-
+            const double eigenvalue = std::clamp(eigenvalues(i), delta, 1 - delta);
             entropy -= eigenvalue * log(eigenvalue) + (1 - eigenvalue) * log(1 - eigenvalue);
         }
 
@@ -95,13 +93,10 @@ namespace fock
 
         Eigen::VectorXd entanglement_spectrum = Eigen::VectorXd::Zero(subregion_correlation_matrix.cols());
 
+        const double delta = std::sqrt(std::numeric_limits<double>::epsilon());
         for (int i = 0; i < subregion_correlation_matrix.cols(); ++i)
         {
-            const auto eigenvalue = eigenvalues(i);
-
-            if (constexpr double epsilon = std::numeric_limits<double>::epsilon();
-                eigenvalue < epsilon || eigenvalue > 1 - epsilon) continue;
-
+            const double eigenvalue = std::clamp(eigenvalues(i), delta, 1 - delta);
             entanglement_spectrum(i) = log((1 - eigenvalue) / eigenvalue);
         }
 
