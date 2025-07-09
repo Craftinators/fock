@@ -93,7 +93,7 @@ namespace fock
         auto eigenvalues = solver.eigenvalues();
         auto eigenvectors = solver.eigenvectors();
 
-        Eigen::VectorXd entanglement_spectrum(subregion_correlation_matrix.cols());
+        Eigen::VectorXd entanglement_spectrum = Eigen::VectorXd::Zero(subregion_correlation_matrix.cols());
 
         for (int i = 0; i < subregion_correlation_matrix.cols(); ++i)
         {
