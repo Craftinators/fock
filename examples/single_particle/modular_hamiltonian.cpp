@@ -27,6 +27,7 @@ int main()
 
     stopwatch.reset();
     auto modular_hamiltonian = fock::build_modular_hamiltonian(subregion_correlation_matrix);
+    time_elapsed = std::chrono::duration_cast<std::chrono::microseconds>(stopwatch.elapsed()).count();
     spdlog::debug("Built modular_hamiltonian in {0:d} us", time_elapsed);
 
     // matplotplusplus does not support Eigen matrices out of the box, so sad :(
