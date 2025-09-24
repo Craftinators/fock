@@ -1,0 +1,1 @@
+add_fock_example(temporary temporary.cpp)
