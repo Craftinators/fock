@@ -1,1 +1,1 @@
-add_fock_example(temporary temporary.cpp)
+add_fock_example(build_hamiltonian build_hamiltonian.cpp)
