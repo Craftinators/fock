@@ -26,12 +26,8 @@ option(FOCK_BUILD_BENCH "Build benchmarks" ${IS_ROOT_PROJECT})
 
 include(FetchContent)
 
-FetchContent_Declare(
-        Eigen3
-        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-        GIT_TAG 5.0.0
-)
-FetchContent_MakeAvailable(Eigen3)
+find_package(Eigen3 REQUIRED)
+find_package(Boost REQUIRED)
 
 add_library(fock STATIC src/library.cpp)
 
@@ -44,7 +40,7 @@ target_include_directories(fock
 target_compile_features(fock PUBLIC cxx_std_20)
 set_target_properties(fock PROPERTIES POSITION_INDEPENDENT_CODE ON OUTPUT_NAME fock)
 
-target_link_libraries(fock PUBLIC Eigen3::Eigen)
+target_link_libraries(fock PUBLIC Eigen3::Eigen Boost::headers)
 
 if (FOCK_BUILD_EXAMPLES)
     add_subdirectory(examples)
