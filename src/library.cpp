@@ -75,3 +75,9 @@ std::vector<unsigned long long> generate_hilbert_subspace(const unsigned int num
     }
     return states;
 }
+
+bool is_valid_region_composition(const unsigned int num_filled_sites,
+    const unsigned long long subregion_state_bitmask, const unsigned long long complement_subregion_state_bitmask)
+{
+    return __builtin_popcountll(subregion_state_bitmask) + __builtin_popcountll(complement_subregion_state_bitmask) == num_filled_sites;
+}
