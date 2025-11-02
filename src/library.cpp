@@ -47,14 +47,15 @@ std::vector<unsigned long long> generate_full_hilbert_space(const unsigned int n
     return states;
 }
 
-std::vector<unsigned long long> generate_hilbert_subspace(const unsigned int num_sites, const unsigned int num_filled_sites)
+std::vector<unsigned long long> generate_hilbert_subspace(const unsigned int num_sites, const unsigned int num_filled_sites,
+                                                          unsigned long long &num_states)
 {
     if (num_filled_sites > num_sites)
     {
         throw std::logic_error("Number of filled sites cannot be greater than the number of sites.");
     }
 
-    const std::size_t num_states = get_binomial_coefficient(num_sites, num_filled_sites);
+    num_states = get_binomial_coefficient(num_sites, num_filled_sites);
     std::vector<unsigned long long> states(num_states);
 
     if (num_filled_sites == 0)
@@ -88,4 +89,37 @@ bool are_neighbors(const unsigned long long initial_state_bitmask, const unsigne
     // __builtin_popcountll(differing_bitmask) == 2 ensures that the states differ by exactly 2 bits
     // and differing_bitmask & differing_bitmask >> 1ULL ensures that these differing bits are adjacent.
     return __builtin_popcountll(differing_bitmask) == 2 && differing_bitmask & differing_bitmask >> 1ULL;
+}
+
+// TODO separate this from code above
+
+#define EIGEN_DONT_VECTORIZE
+#include <Eigen/Dense>
+#include <boost/multiprecision/cpp_dec_float.hpp>
+
+const boost::multiprecision::cpp_dec_float_50 zero("0");
+const boost::multiprecision::cpp_dec_float_50 minus_one("-1");
+
+Eigen::Matrix<boost::multiprecision::cpp_dec_float_50, Eigen::Dynamic, Eigen::Dynamic>
+build_hamiltonian(const unsigned int num_sites, const unsigned int num_filled_sites)
+{
+    unsigned long long num_states;
+    const auto states = generate_hilbert_subspace(num_sites, num_filled_sites, num_states);
+
+    Eigen::Matrix<boost::multiprecision::cpp_dec_float_50, Eigen::Dynamic, Eigen::Dynamic>
+            hamiltonian(num_states, num_states);
+    hamiltonian.setZero();
+
+    for (Eigen::Index i = 0; i < num_states; ++i)
+    {
+        for (Eigen::Index j = i + 1; j < num_states; ++j)
+        {
+            if (are_neighbors(states[i], states[j]))
+            {
+                hamiltonian(i, j) = hamiltonian(j, i) = minus_one;
+            }
+        }
+    }
+
+    return hamiltonian;
 }

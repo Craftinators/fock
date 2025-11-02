@@ -4,17 +4,17 @@
 
 int main()
 {
-    std::cout << "Full Hilbert Space:\n";
-    for (const auto state_bitmask: generate_full_hilbert_space(4))
+    const auto hamiltonian = build_hamiltonian(4, 2);
+
+    const Eigen::SelfAdjointEigenSolver<Eigen::Matrix<boost::multiprecision::cpp_dec_float_50, Eigen::Dynamic, Eigen::Dynamic> > solver(hamiltonian);
+    if (solver.info() != Eigen::Success)
     {
-        std::cout << std::bitset<4>(state_bitmask);
-        if (__builtin_popcount(state_bitmask) == 2)
-            std::cout << " (IN SUBSPACE)";
-        std::cout << "\n";
+        std::cerr << "Eigen decomposition failed\n";
+        return 1;
     }
-    std::cout << "Hilbert Subspace:\n";
-    for (const auto state_bitmask: generate_hilbert_subspace(4, 2))
-    {
-        std::cout << std::bitset<4>(state_bitmask) << "\n";
-    }
+
+    const Eigen::Matrix<boost::multiprecision::cpp_dec_float_50, Eigen::Dynamic, Eigen::Dynamic> &eigenstates = solver.eigenvectors();
+
+    std::cout << std::setprecision(std::numeric_limits<boost::multiprecision::cpp_dec_float_50>::digits10)
+            << eigenstates << std::endl;
 }
