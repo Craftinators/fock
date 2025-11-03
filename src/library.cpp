@@ -93,7 +93,7 @@ bool are_neighbors(const unsigned long long initial_state_bitmask, const unsigne
 
 // TODO separate this from code above
 
-#define EIGEN_DONT_VECTORIZE
+#define EIGEN_DONT_VECTORIZE // Should I do this?
 #include <Eigen/Dense>
 #include <boost/multiprecision/cpp_dec_float.hpp>
 
@@ -110,13 +110,13 @@ build_hamiltonian(const unsigned int num_sites, const unsigned int num_filled_si
             hamiltonian(num_states, num_states);
     hamiltonian.setZero();
 
-    for (Eigen::Index i = 0; i < num_states; ++i)
+    for (Eigen::Index final_state_index = 0; final_state_index < num_states; ++final_state_index)
     {
-        for (Eigen::Index j = i + 1; j < num_states; ++j)
+        for (Eigen::Index initial_state_index = final_state_index + 1; initial_state_index < num_states; ++initial_state_index)
         {
-            if (are_neighbors(states[i], states[j]))
+            if (are_neighbors(states[final_state_index], states[initial_state_index]))
             {
-                hamiltonian(i, j) = hamiltonian(j, i) = minus_one;
+                hamiltonian(final_state_index, initial_state_index) = hamiltonian(initial_state_index, final_state_index) = minus_one;
             }
         }
     }
