@@ -9,7 +9,7 @@ inline std::uint64_t get_next_bit_permutation(const std::uint64_t current_bitmas
     return ((next_rippled_bitmask ^ current_bitmask) >> 2) / least_significant_bit | next_rippled_bitmask;
 }
 
-std::uint64_t get_binomial_coefficient(const std::uint32_t n, std::uint32_t k)
+inline std::uint64_t get_binomial_coefficient(const std::uint32_t n, std::uint32_t k)
 {
     if (k > n)
     {
@@ -32,6 +32,22 @@ std::uint64_t get_binomial_coefficient(const std::uint32_t n, std::uint32_t k)
         result = result * (n - i) / (i + 1ULL);
     }
     return result;
+}
+
+inline std::uint64_t pdep_implementation(std::uint64_t source, std::uint64_t mask)
+{
+    std::uint64_t destination = 0;
+    while (source && mask)
+    {
+        const unsigned num_trailing_zeros = __builtin_ctzll(mask);
+        if (source & 1ULL)
+        {
+            destination |= 1ULL << num_trailing_zeros;
+        }
+        source >>= 1ULL;
+        mask &= mask - 1ULL;
+    }
+    return destination;
 }
 
 std::vector<std::uint64_t> generate_full_hilbert_space(const std::uint32_t num_sites)
@@ -91,23 +107,7 @@ bool are_neighbors(const std::uint64_t initial_state_bitmask, const std::uint64_
     return __builtin_popcountll(differing_bitmask) == 2 && differing_bitmask & differing_bitmask >> 1ULL;
 }
 
-inline std::uint64_t pdep_implementation(std::uint64_t source, std::uint64_t mask)
-{
-    std::uint64_t destination = 0;
-    while (source && mask)
-    {
-        const unsigned num_trailing_zeros = __builtin_ctzll(mask);
-        if (source & 1ULL)
-        {
-            destination |= 1ULL << num_trailing_zeros;
-        }
-        source >>= 1ULL;
-        mask &= mask - 1ULL;
-    }
-    return destination;
-}
-
-std::uint64_t get_composite_state_bitmask(const std::vector<std::uint32_t> &subregion_indices, const int num_sites,
+std::uint64_t get_composite_state_bitmask(const std::vector<std::uint32_t> &subregion_indices, const std::uint32_t num_sites,
                                           const std::uint64_t subregion_state_bitmask, const std::uint64_t complement_subregion_state_bitmask)
 {
     std::uint64_t subregion_mask = 0;
@@ -115,7 +115,7 @@ std::uint64_t get_composite_state_bitmask(const std::vector<std::uint32_t> &subr
     {
         subregion_mask |= 1ULL << (num_sites - x - 1ULL);
     }
-    const uint64_t complement_subregion_mask = (1ULL << num_sites) - 1ULL ^ subregion_mask;
+    const std::uint64_t complement_subregion_mask = (1ULL << num_sites) - 1ULL ^ subregion_mask;
 #if defined(__BMI2__) && (defined(__x86_64__) || defined(_M_X64))
     return _pdep_u64(subregion_state_bitmask, subregion_mask) |
            _pdep_u64(complement_subregion_state_bitmask, complement_subregion_mask);
