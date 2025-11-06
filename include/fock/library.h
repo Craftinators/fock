@@ -6,7 +6,7 @@
 std::vector<std::uint64_t> generate_full_hilbert_space(std::uint32_t num_sites);
 
 std::vector<std::uint64_t> generate_hilbert_subspace(std::uint32_t num_sites, std::uint32_t num_filled_sites,
-                                                          std::uint64_t &num_states);
+                                                     std::uint64_t &num_states);
 
 bool is_valid_region_composition(std::uint32_t num_filled_sites,
                                  std::uint64_t subregion_state_bitmask, std::uint64_t complement_subregion_state_bitmask);

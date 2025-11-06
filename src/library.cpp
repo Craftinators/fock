@@ -165,7 +165,7 @@ Eigen::SparseMatrix<boost::multiprecision::cpp_dec_float_50> build_sparse_hamilt
     const auto states = generate_hilbert_subspace(num_sites, num_filled_sites, num_states);
 
     // Build sparse matrix using triplets
-    std::vector<Eigen::Triplet<boost::multiprecision::cpp_dec_float_50>> triplets;
+    std::vector<Eigen::Triplet<boost::multiprecision::cpp_dec_float_50> > triplets;
     triplets.reserve(num_states * 4); // rough guess
 
     for (int i = 0; i < num_states; ++i)
