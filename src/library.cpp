@@ -130,7 +130,6 @@ std::uint64_t get_composite_state_bitmask(const std::vector<std::uint32_t> &subr
 #include <Eigen/Dense>
 #include <boost/multiprecision/cpp_dec_float.hpp>
 
-const boost::multiprecision::cpp_dec_float_50 zero("0");
 const boost::multiprecision::cpp_dec_float_50 minus_one("-1");
 
 Eigen::Matrix<boost::multiprecision::cpp_dec_float_50, Eigen::Dynamic, Eigen::Dynamic>
@@ -154,5 +153,34 @@ build_hamiltonian(const std::uint32_t num_sites, const std::uint32_t num_filled_
         }
     }
 
+    return hamiltonian;
+}
+
+// --- TEMPORARY ---
+#import <Eigen/Sparse>
+
+Eigen::SparseMatrix<boost::multiprecision::cpp_dec_float_50> build_sparse_hamiltonian_sparse(const std::uint32_t num_sites, const std::uint32_t num_filled_sites)
+{
+    std::uint64_t num_states;
+    const auto states = generate_hilbert_subspace(num_sites, num_filled_sites, num_states);
+
+    // Build sparse matrix using triplets
+    std::vector<Eigen::Triplet<boost::multiprecision::cpp_dec_float_50>> triplets;
+    triplets.reserve(num_states * 4); // rough guess
+
+    for (int i = 0; i < num_states; ++i)
+    {
+        for (int j = i + 1; j < num_states; ++j)
+        {
+            if (are_neighbors(states[i], states[j]))
+            {
+                triplets.emplace_back(i, j, minus_one);
+                triplets.emplace_back(j, i, minus_one);
+            }
+        }
+    }
+
+    Eigen::SparseMatrix<boost::multiprecision::cpp_dec_float_50> hamiltonian(num_states, num_states);
+    hamiltonian.setFromTriplets(triplets.begin(), triplets.end());
     return hamiltonian;
 }
