@@ -27,6 +27,7 @@ option(FOCK_BUILD_BENCH "Build benchmarks" ${IS_ROOT_PROJECT})
 include(FetchContent)
 
 find_package(Eigen3 REQUIRED)
+find_package(Spectra REQUIRED)
 find_package(Boost REQUIRED)
 
 add_library(fock STATIC src/library.cpp)
