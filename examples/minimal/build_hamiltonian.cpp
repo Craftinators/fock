@@ -1,20 +1,29 @@
 #include <iostream>
 
 #include "fock/library.h"
+#include <Spectra/GenEigsSolver.h>
+#include <Spectra/MatOp/SparseGenMatProd.h>
 
 int main()
 {
-    const auto hamiltonian = build_hamiltonian(4, 2);
+    const auto hamiltonian = build_sparse_hamiltonian_sparse(12, 6);
 
-    const Eigen::SelfAdjointEigenSolver<Eigen::Matrix<boost::multiprecision::cpp_dec_float_50, Eigen::Dynamic, Eigen::Dynamic> > solver(hamiltonian);
-    if (solver.info() != Eigen::Success)
+    Spectra::SparseGenMatProd<double> operation(hamiltonian);
+    Spectra::GenEigsSolver eigen_solver(operation, 15, 20);
+
+    eigen_solver.init();
+    eigen_solver.compute(Spectra::SortRule::SmallestReal);
+
+    Eigen::VectorXcd eigenvalues;
+    Eigen::MatrixXcd eigenvectors;
+    if(eigen_solver.info() == Spectra::CompInfo::Successful)
     {
-        std::cerr << "Eigen decomposition failed\n";
-        return 1;
+        eigenvalues = eigen_solver.eigenvalues();
+        eigenvectors = eigen_solver.eigenvectors();
     }
 
-    const Eigen::Matrix<boost::multiprecision::cpp_dec_float_50, Eigen::Dynamic, Eigen::Dynamic> &eigenstates = solver.eigenvectors();
+    std::cout << "\n13th eigenvalue: " << eigenvalues(12) << "\n13th eigenvector:\n" << eigenvectors.col(12) <<
+        "\n\n14th eigenvalue: " << eigenvalues(13) << "\n14th eigenvector:\n" << eigenvectors.col(13) << std::endl;
 
-    std::cout << std::setprecision(std::numeric_limits<boost::multiprecision::cpp_dec_float_50>::digits10)
-            << eigenstates << std::endl;
+    return 0;
 }
