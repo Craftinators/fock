@@ -1,6 +1,7 @@
 #include <vector>
 #include <numeric>
 #include <stdexcept>
+#include <cstdint>
 
 inline std::uint64_t get_next_bit_permutation(const std::uint64_t current_bitmask)
 {
@@ -125,62 +126,46 @@ std::uint64_t get_composite_state_bitmask(const std::vector<std::uint32_t> &subr
 #endif
 }
 
-// TODO Separate this from code above
-// TODO Check if this is needed for precision #define EIGEN_DONT_VECTORIZE
-#include <Eigen/Dense>
-#include <boost/multiprecision/cpp_dec_float.hpp>
+// TODO --- Separate this from the code above! ---
 
-const boost::multiprecision::cpp_dec_float_50 minus_one("-1");
-
-Eigen::Matrix<boost::multiprecision::cpp_dec_float_50, Eigen::Dynamic, Eigen::Dynamic>
-build_hamiltonian(const std::uint32_t num_sites, const std::uint32_t num_filled_sites)
-{
-    std::uint64_t num_states;
-    const auto states = generate_hilbert_subspace(num_sites, num_filled_sites, num_states);
-
-    Eigen::Matrix<boost::multiprecision::cpp_dec_float_50, Eigen::Dynamic, Eigen::Dynamic>
-            hamiltonian(num_states, num_states);
-    hamiltonian.setZero();
-
-    for (Eigen::Index final_state_index = 0; final_state_index < num_states; ++final_state_index)
-    {
-        for (Eigen::Index initial_state_index = final_state_index + 1L; initial_state_index < num_states; ++initial_state_index)
-        {
-            if (are_neighbors(states[final_state_index], states[initial_state_index]))
-            {
-                hamiltonian(final_state_index, initial_state_index) = hamiltonian(initial_state_index, final_state_index) = minus_one;
-            }
-        }
-    }
-
-    return hamiltonian;
-}
-
-// --- TEMPORARY ---
+#include <unordered_map>
 #import <Eigen/Sparse>
 
-Eigen::SparseMatrix<boost::multiprecision::cpp_dec_float_50> build_sparse_hamiltonian_sparse(const std::uint32_t num_sites, const std::uint32_t num_filled_sites)
+Eigen::SparseMatrix<double> build_hamiltonian(const std::uint32_t num_sites, const std::uint32_t num_filled_sites)
 {
     std::uint64_t num_states;
-    const auto states = generate_hilbert_subspace(num_sites, num_filled_sites, num_states);
+    const std::vector<std::uint64_t> states = generate_hilbert_subspace(num_sites, num_filled_sites, num_states);
 
-    // Build sparse matrix using triplets
-    std::vector<Eigen::Triplet<boost::multiprecision::cpp_dec_float_50> > triplets;
-    triplets.reserve(num_states * 4); // rough guess
-
-    for (int i = 0; i < num_states; ++i)
+    std::unordered_map<std::uint64_t, std::uint64_t> state_to_index;
+    state_to_index.reserve(num_states);
+    for (std::uint64_t state_index = 0; state_index < num_states; ++state_index)
     {
-        for (int j = i + 1; j < num_states; ++j)
+        state_to_index[states[state_index]] = state_index;
+    }
+
+    std::vector<Eigen::Triplet<double> > triplets;
+    triplets.reserve(2 * num_states * num_filled_sites * (num_sites - num_filled_sites) / num_sites);
+
+    for (std::uint64_t initial_state_index = 0; initial_state_index < num_states; ++initial_state_index)
+    {
+        const std::uint64_t initial_state_bitmask = states[initial_state_index];
+        for (std::uint64_t current_site = 0; current_site < num_sites - 1; ++current_site)
         {
-            if (are_neighbors(states[i], states[j]))
+            const bool is_current_site_occupied = initial_state_bitmask >> current_site & 1;
+            if (const bool is_next_site_occupied = initial_state_bitmask >> (current_site + 1) & 1;
+                is_current_site_occupied && !is_next_site_occupied)
             {
-                triplets.emplace_back(i, j, minus_one);
-                triplets.emplace_back(j, i, minus_one);
+                const std::uint64_t final_state_bitmask = initial_state_bitmask & ~(1ULL << current_site) | 1ULL << (current_site + 1);
+                const std::uint64_t final_state_index = state_to_index.at(final_state_bitmask);
+
+                triplets.emplace_back(initial_state_index, final_state_index, -1.0);
+                triplets.emplace_back(final_state_index, initial_state_index, -1.0);
             }
         }
     }
 
-    Eigen::SparseMatrix<boost::multiprecision::cpp_dec_float_50> hamiltonian(num_states, num_states);
+    // TODO Revisit this warning
+    Eigen::SparseMatrix<double> hamiltonian(num_states, num_states); // NOLINT(*-narrowing-conversions)
     hamiltonian.setFromTriplets(triplets.begin(), triplets.end());
     return hamiltonian;
 }
