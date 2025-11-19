@@ -169,3 +169,161 @@ Eigen::SparseMatrix<double> build_hamiltonian(const std::uint32_t num_sites, con
     hamiltonian.setFromTriplets(triplets.begin(), triplets.end());
     return hamiltonian;
 }
+
+Eigen::SparseMatrix<double> build_reduced_density_matrix(const Eigen::VectorXd state,
+                                                         const std::vector<std::uint32_t> &subregion_indices,
+                                                         const std::uint32_t num_sites,
+                                                         const std::uint32_t num_filled_sites)
+{
+    // --- High level:
+    // We compute rho_A = Tr_B |Psi><Psi| where |Psi> is given by `state` expressed in the
+    // particle-number-conserving basis produced by generate_hilbert_subspace(num_sites,num_filled_sites).
+    //
+    // Indexing:
+    //  - For the full system the basis states are enumerated by bitmasks (uint64_t) with exactly
+    //    num_filled_sites bits set. `generate_hilbert_subspace` returns that list in `states`.
+    //  - The subregion is defined by `subregion_indices` (sites belonging to A). We enumerate
+    //    all local subregion bitmasks (0..2^m-1) and complement bitmasks (0..2^(n-m)-1).
+    //  - We only consider pairs (subregion_mask, complement_mask) whose popcounts add to num_filled_sites.
+    //
+    // Algorithm:
+    //  1. Recreate the full-subspace basis `states` and a map state->index (so we can look up amplitudes).
+    //  2. Determine which local subregion bitmasks are *possible* (i.e. there exists a complement filling
+    //     making the total particle number correct). These form the basis of rho_A (dimension = #allowed masks).
+    //  3. For each complement bitmask b:
+    //       - compute the vector v_b whose components are psi_{a,b} for all allowed a
+    //       - add v_b * v_b^T to rho_A
+    //  4. Return rho_A as an Eigen::SparseMatrix<double>.
+    //
+    // Complexity: loops over all complement configurations and for each builds a small vector over
+    // compatible subregion configurations. Works well when subregion is small; if subregion is large
+    // the memory/time grows combinatorially.
+
+    // Basic checks
+    if (num_sites >= 64)
+    {
+        throw std::runtime_error("Number of sites must be less than 64.");
+    }
+
+    // Reconstruct the full Hilbert subspace basis and map states -> linear indices (same as build_hamiltonian).
+    std::uint64_t num_states_u64;
+    const std::vector<std::uint64_t> full_states = generate_hilbert_subspace(num_sites, num_filled_sites, num_states_u64);
+    const Eigen::Index num_states = static_cast<Eigen::Index>(num_states_u64);
+
+    if (static_cast<Eigen::Index>(state.size()) != num_states)
+    {
+        throw std::invalid_argument("Size of `state` does not match number of states in the specified subspace.");
+    }
+
+    std::unordered_map<std::uint64_t, std::uint64_t> state_to_index;
+    state_to_index.reserve(num_states_u64);
+    for (std::uint64_t i = 0; i < num_states_u64; ++i)
+    {
+        state_to_index[full_states[i]] = i;
+    }
+
+    // Subregion size and complement size
+    const std::uint32_t m = static_cast<std::uint32_t>(subregion_indices.size());
+    const std::uint32_t complement_size = num_sites - m;
+
+    // Determine allowed subregion local bitmasks:
+    // A subregion mask is allowed if there exists a complement filling giving total num_filled_sites.
+    // That is, kA = popcount(subregion_mask) must satisfy 0 <= num_filled_sites - kA <= complement_size.
+    std::vector<std::uint64_t> allowed_sub_masks;
+    allowed_sub_masks.reserve(1u << std::min<std::uint32_t>(m, 20u)); // heuristic reserve
+    for (std::uint64_t sub_mask = 0ULL; sub_mask < (1ULL << m); ++sub_mask)
+    {
+        const std::uint32_t kA = __builtin_popcountll(sub_mask);
+        if (kA <= num_filled_sites && (num_filled_sites - kA) <= complement_size)
+        {
+            allowed_sub_masks.push_back(sub_mask);
+        }
+    }
+
+    // Map subregion local mask -> index in reduced matrix
+    std::unordered_map<std::uint64_t, std::uint32_t> submask_to_index;
+    submask_to_index.reserve(allowed_sub_masks.size());
+    for (std::uint32_t i = 0; i < allowed_sub_masks.size(); ++i)
+    {
+        submask_to_index[allowed_sub_masks[i]] = i;
+    }
+
+    const Eigen::Index dimA = static_cast<Eigen::Index>(allowed_sub_masks.size());
+    // Dense accumulation for simplicity and clarity, then convert to sparse at the end.
+    Eigen::MatrixXd rhoA = Eigen::MatrixXd::Zero(dimA, dimA);
+
+    // Iterate over all complement local bitmasks. For each complement mask b compute kB = popcount(b),
+    // then kA = num_filled_sites - kB. If kA is in range, gather amplitudes psi_{a,b} for all subregion
+    // masks a with popcount(a) == kA and accumulate outer product.
+    if (complement_size == 0)
+    {
+        // Trivial complement: the reduced density matrix equals outer product of the state expressed in
+        // the subregion basis. There is exactly one complement configuration (empty).
+        // Build vector v_a = psi_{a,empty} for all allowed a and do v v^T.
+        Eigen::VectorXd v = Eigen::VectorXd::Zero(dimA);
+        for (std::uint32_t ai = 0; ai < allowed_sub_masks.size(); ++ai)
+        {
+            const std::uint64_t a_mask = allowed_sub_masks[ai];
+            const std::uint64_t full_mask = get_composite_state_bitmask(subregion_indices, num_sites, a_mask, 0ULL);
+            const std::uint64_t full_index = state_to_index.at(full_mask);
+            v(static_cast<Eigen::Index>(ai)) = state(static_cast<Eigen::Index>(full_index));
+        }
+        rhoA = v * v.transpose();
+    } else
+    {
+        const std::uint64_t complement_iter_limit = (1ULL << complement_size);
+        for (std::uint64_t comp_mask = 0ULL; comp_mask < complement_iter_limit; ++comp_mask)
+        {
+            const std::uint32_t kB = __builtin_popcountll(comp_mask);
+            // Required number of particles in A for this complement:
+            if (kB > num_filled_sites) continue;
+            const std::uint32_t kA_required = num_filled_sites - kB;
+            if (kA_required > m) continue; // impossible
+
+            // Gather amplitudes for all allowed subregion masks a that have popcount == kA_required
+            // We'll build a small vector v where v[i] corresponds to allowed_sub_masks[i] (if its popcount matches).
+            std::vector<std::pair<Eigen::Index, double> > comp_amplitudes; // (reduced_index, amplitude)
+            comp_amplitudes.reserve(get_binomial_coefficient(m, kA_required));
+            for (std::uint32_t ai = 0; ai < allowed_sub_masks.size(); ++ai)
+            {
+                const std::uint64_t a_mask = allowed_sub_masks[ai];
+                if (__builtin_popcountll(a_mask) != kA_required) continue;
+
+                // Compose full-system bitmask: place bits of `a_mask` in subregion positions and
+                // bits of `comp_mask` in complement positions.
+                const std::uint64_t full_mask = get_composite_state_bitmask(subregion_indices, num_sites, a_mask, comp_mask);
+
+                // Look up the linear index in the full subspace and fetch amplitude from `state`.
+                // We expect the full_mask to be present in the subspace (since popcounts sum to num_filled_sites).
+                auto it = state_to_index.find(full_mask);
+                if (it == state_to_index.end())
+                {
+                    // This should not happen for a correctly-constructed mapping; skip defensively.
+                    continue;
+                }
+                const std::uint64_t full_index = it->second;
+                const double amp = state(static_cast<Eigen::Index>(full_index));
+                comp_amplitudes.emplace_back(static_cast<Eigen::Index>(ai), amp);
+            }
+
+            // Accumulate outer product v * v^T into rhoA, where v contains amplitudes for this complement.
+            const std::size_t L = comp_amplitudes.size();
+            for (std::size_t i = 0; i < L; ++i)
+            {
+                const Eigen::Index ri = comp_amplitudes[i].first;
+                const double ai_val = comp_amplitudes[i].second;
+                for (std::size_t j = 0; j < L; ++j)
+                {
+                    const Eigen::Index rj = comp_amplitudes[j].first;
+                    const double aj_val = comp_amplitudes[j].second;
+                    rhoA(ri, rj) += ai_val * aj_val; // conjugation if complex
+                }
+            }
+        }
+    }
+
+    // Convert dense reduced density matrix to sparse and return.
+    Eigen::SparseMatrix<double> rhoA_sparse(static_cast<Eigen::Index>(dimA), static_cast<Eigen::Index>(dimA));
+    rhoA_sparse = rhoA.sparseView(); // efficient conversion
+    return rhoA_sparse;
+}

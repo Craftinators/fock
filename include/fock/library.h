@@ -22,4 +22,9 @@ std::uint64_t get_composite_state_bitmask(const std::vector<std::uint32_t> &subr
 
 Eigen::SparseMatrix<double> build_hamiltonian(std::uint32_t num_sites, std::uint32_t num_filled_sites);
 
+Eigen::SparseMatrix<double> build_reduced_density_matrix(Eigen::VectorXd state,
+                                                         const std::vector<std::uint32_t> &subregion_indices,
+                                                         std::uint32_t num_sites,
+                                                         std::uint32_t num_filled_sites);
+
 #endif // FOCK_LIBRARY_H
