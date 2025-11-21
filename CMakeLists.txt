@@ -30,7 +30,7 @@ find_package(Eigen3 REQUIRED)
 find_package(Spectra REQUIRED)
 find_package(Boost REQUIRED)
 
-add_library(fock STATIC src/library.cpp)
+add_library(fock STATIC src/bitmask.cpp src/matrix.cpp)
 
 target_include_directories(fock
         PUBLIC
