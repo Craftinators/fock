@@ -27,8 +27,7 @@ namespace fock
         }
     }
 
-    // See https://stackoverflow.com/questions/21132538/correct-usage-of-the-eigenref-class for Eigen::Ref
-    inline void generate_hamiltonian(const std::uint32_t num_sites, const std::uint32_t num_filled_sites, Eigen::Ref<Eigen::MatrixXd> hamiltonian)
+    inline void generate_hamiltonian(const std::uint32_t num_sites, const std::uint32_t num_filled_sites, Eigen::MatrixXd& hamiltonian)
     {
         std::vector<uint64_t> basis_states;
         generate_basis(num_sites, num_filled_sites, basis_states);
@@ -52,7 +51,7 @@ namespace fock
                          std::uint32_t num_filled_sites,
                          const Eigen::Ref<const Eigen::VectorXd>&  eigenstate,
                          const std::vector<std::uint32_t>& subregion_indices,
-                         Eigen::Ref<Eigen::MatrixXd> rdm)
+                         Eigen::MatrixXd& rdm)
     {
         // TODO: implementation
     }
