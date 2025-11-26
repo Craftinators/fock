@@ -15,6 +15,13 @@ namespace fock
 
     inline void generate_basis(const std::uint32_t num_sites, const std::uint32_t num_filled_sites, std::vector<uint64_t>& basis_states)
     {
+        const std::uint32_t minimum_difference = std::min(num_filled_sites, num_sites - num_filled_sites);
+        std::uint64_t accumulation = 1;
+        for (std::uint32_t i = 1; i <= minimum_difference; ++i)
+        {
+            accumulation = accumulation * (num_sites - i + 1) / i;
+        }
+        basis_states.reserve(accumulation);
         std::uint64_t current_state_bitmask = (1ULL << num_filled_sites) - 1ULL;
         while (current_state_bitmask < 1ULL << num_sites)
         {
