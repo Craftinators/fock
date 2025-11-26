@@ -36,7 +36,7 @@ namespace fock
         const std::size_t num_states = basis_states.size();
 
         hamiltonian = Eigen::MatrixXd::Zero(num_states, num_states); // NOLINT(*-narrowing-conversions)
-        git fetch originfor (int initial_state_index = 0; initial_state_index < num_states; ++initial_state_index)
+        for (int initial_state_index = 0; initial_state_index < num_states; ++initial_state_index)
         {
             for (int final_state_index = 0; final_state_index < num_states; ++final_state_index)
             {

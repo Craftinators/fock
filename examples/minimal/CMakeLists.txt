@@ -1,1 +1,0 @@
-add_fock_example(build_hamiltonian build_hamiltonian.cpp)
