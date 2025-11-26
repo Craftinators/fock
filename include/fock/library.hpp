@@ -2,7 +2,6 @@
 #define FOCK_LIBRARY_H
 
 #include <numeric>
-#include <stdexcept>
 
 #include <Eigen/Dense>
 
