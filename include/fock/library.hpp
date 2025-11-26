@@ -9,8 +9,7 @@ namespace fock
 {
     inline void generate_basis(const std::uint32_t num_sites, std::vector<uint64_t>& basis_states)
     {
-        const std::size_t num_states = 1 << num_sites;
-        basis_states.resize(num_states);
+        basis_states.resize(1 << num_sites);
         std::iota(basis_states.begin(), basis_states.end(), 0ULL);
     }
 
