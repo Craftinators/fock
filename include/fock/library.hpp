@@ -39,7 +39,7 @@ namespace fock
         generate_basis(num_sites, num_filled_sites, basis_states);
         const std::size_t num_states = basis_states.size();
 
-        hamiltonian = Eigen::MatrixXd::Zero(num_states, num_states); // NOLINT(*-narrowing-conversions)
+        hamiltonian = Eigen::MatrixXd::Zero(num_states, num_states);
         for (std::uint64_t initial_state_index = 0; initial_state_index < num_states; ++initial_state_index)
         {
             for (std::uint64_t final_state_index = 0; final_state_index < num_states; ++final_state_index)
@@ -47,7 +47,7 @@ namespace fock
                 // If states differ by a singular hop e.g., 0011 -> 0101
                 const std::uint64_t differing_bitmask = basis_states[initial_state_index] ^ basis_states[final_state_index];
                 if (!(std::popcount(differing_bitmask) == 2 && differing_bitmask & differing_bitmask >> 1ULL)) continue;
-                hamiltonian(final_state_index, initial_state_index) = -1; // NOLINT(*-narrowing-conversions)
+                hamiltonian(final_state_index, initial_state_index) = -1;
             }
         }
     }
