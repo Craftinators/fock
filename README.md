@@ -1,4 +1,4 @@
-<div align="center">
+<div>
     <br/>
     <p>
         <a href="https://github.com/Craftinators/fock"><img src="https://repository-images.githubusercontent.com/998244864/6d74e16d-4b0d-43e2-be9c-2d23ac045df0" alt="fock" /></a>
