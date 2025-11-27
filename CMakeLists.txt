@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.0)
-project(fock VERSION 1.0.0
+project(fock VERSION 0.0.1
     DESCRIPTION "A minimal quantum computational library for hard-core bosonic systems"
     LANGUAGES CXX)
 
