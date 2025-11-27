@@ -40,14 +40,14 @@ namespace fock
         const std::size_t num_states = basis_states.size();
 
         hamiltonian = Eigen::MatrixXd::Zero(num_states, num_states); // NOLINT(*-narrowing-conversions)
-        for (int initial_state_index = 0; initial_state_index < num_states; ++initial_state_index)
+        for (std::uint64_t initial_state_index = 0; initial_state_index < num_states; ++initial_state_index)
         {
-            for (int final_state_index = 0; final_state_index < num_states; ++final_state_index)
+            for (std::uint64_t final_state_index = 0; final_state_index < num_states; ++final_state_index)
             {
                 // If states differ by a singular hop e.g., 0011 -> 0101
                 const std::uint64_t differing_bitmask = basis_states[initial_state_index] ^ basis_states[final_state_index];
-                if (!(__builtin_popcountll(differing_bitmask) == 2 && differing_bitmask & differing_bitmask >> 1ULL)) continue;
-                hamiltonian(final_state_index, initial_state_index) = -1;
+                if (!(std::popcount(differing_bitmask) == 2 && differing_bitmask & differing_bitmask >> 1ULL)) continue;
+                hamiltonian(final_state_index, initial_state_index) = -1; // NOLINT(*-narrowing-conversions)
             }
         }
     }
