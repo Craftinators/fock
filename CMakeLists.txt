@@ -15,11 +15,11 @@ if (NOT Eigen3_FOUND)
     FetchContent_MakeAvailable(eigen)
 endif ()
 
-add_library(${CMAKE_PROJECT_NAME} STATIC src/library.cpp)
-target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
+add_library(${CMAKE_PROJECT_NAME} INTERFACE)
+target_include_directories(${CMAKE_PROJECT_NAME} INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(fock PUBLIC Eigen3::Eigen)
+target_link_libraries(${CMAKE_PROJECT_NAME} INTERFACE Eigen3::Eigen)
 
 add_subdirectory(examples)
